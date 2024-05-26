@@ -7,6 +7,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.Arguments;
@@ -154,6 +155,7 @@ public class ReactNativeUnityViewManager extends ReactNativeUnityViewManagerSpec
   }
 
   public static void sendMessageToMobileApp(String message) {
+
     WritableMap data = Arguments.createMap();
     data.putString("message", message);
     ReactContext reactContext = (ReactContext) view.getContext();
@@ -187,7 +189,7 @@ public class ReactNativeUnityViewManager extends ReactNativeUnityViewManagerSpec
   public void onHostDestroy() {
     if (isUnityReady()) {
       assert getPlayer() != null;
-      getPlayer().quit();
+      getPlayer().unload();
     }
   }
 

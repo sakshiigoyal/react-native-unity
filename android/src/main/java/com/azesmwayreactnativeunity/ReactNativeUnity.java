@@ -1,16 +1,20 @@
 package com.azesmwayreactnativeunity;
 
 import android.app.Activity;
+import android.content.ContextWrapper;
 import android.graphics.PixelFormat;
 import android.os.Build;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 
+import com.unity3d.player.IUnityPlayerSupport;
 import com.unity3d.player.UnityPlayer;
 import com.unity3d.player.IUnityPlayerLifecycleEvents;
+import com.unity3d.player.UnityPlayerForActivityOrService;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-
 public class ReactNativeUnity {
   private static UnityPlayer unityPlayer;
   public static boolean _isUnityReady;
@@ -48,7 +52,8 @@ public class ReactNativeUnity {
             fullScreen = true;
           }
 
-          unityPlayer = new UnityPlayer(activity, new IUnityPlayerLifecycleEvents() {
+          unityPlayer = new UnityPlayerForActivityOrService(activity, new IUnityPlayerLifecycleEvents() {
+
             @Override
             public void onUnityPlayerUnloaded() {
               callback.onUnload();
@@ -60,6 +65,8 @@ public class ReactNativeUnity {
             }
           });
 
+          FrameLayout unityPlayerView = unityPlayer.getFrameLayout();
+
           try {
             // wait a moment. fix unity cannot start when startup.
             Thread.sleep(1000);
@@ -69,7 +76,7 @@ public class ReactNativeUnity {
           // start unity
           addUnityViewToBackground();
           unityPlayer.windowFocusChanged(true);
-          unityPlayer.requestFocus();
+          unityPlayerView.requestFocus();
           unityPlayer.resume();
 
           // restore window layout
@@ -109,35 +116,37 @@ public class ReactNativeUnity {
     if (unityPlayer == null) {
       return;
     }
-    if (unityPlayer.getParent() != null) {
+    FrameLayout unityPlayerView = unityPlayer.getFrameLayout();
+    if (unityPlayerView.getParent() != null) {
       // NOTE: If we're being detached as part of the transition, make sure
       // to explicitly finish the transition first, as it might still keep
       // the view's parent around despite calling `removeView()` here. This
       // prevents a crash on an `addContentView()` later on.
       // Otherwise, if there's no transition, it's a no-op.
       // See https://stackoverflow.com/a/58247331
-      ((ViewGroup) unityPlayer.getParent()).endViewTransition(unityPlayer);
-      ((ViewGroup) unityPlayer.getParent()).removeView(unityPlayer);
+      ((ViewGroup) unityPlayerView.getParent()).endViewTransition(unityPlayerView);
+      ((ViewGroup) unityPlayerView.getParent()).removeView(unityPlayerView);
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      unityPlayer.setZ(-1f);
+      unityPlayerView.setZ(-1f);
     }
-    final Activity activity = ((Activity) unityPlayer.getContext());
+    final Activity activity = ((Activity) unityPlayerView.getContext());
     ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(1, 1);
-    activity.addContentView(unityPlayer, layoutParams);
+    activity.addContentView(unityPlayerView, layoutParams);
   }
 
   public static void addUnityViewToGroup(ViewGroup group) {
     if (unityPlayer == null) {
       return;
     }
-    if (unityPlayer.getParent() != null) {
-      ((ViewGroup) unityPlayer.getParent()).removeView(unityPlayer);
+    FrameLayout unityPlayerView = unityPlayer.getFrameLayout();
+    if (unityPlayerView.getParent() != null) {
+      ((ViewGroup) unityPlayerView.getParent()).removeView(unityPlayerView);
     }
     ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT);
-    group.addView(unityPlayer, 0, layoutParams);
+    group.addView(unityPlayerView, 0, layoutParams);
     unityPlayer.windowFocusChanged(true);
-    unityPlayer.requestFocus();
+    unityPlayerView.requestFocus();
     unityPlayer.resume();
   }
 
